@@ -81,14 +81,14 @@ juce::String buildAutoButtonTooltip(const ParameterPanel::AutoButtonPresentation
     if (tooltip.isEmpty()) {
         switch (presentation.mode) {
             case ParameterPanel::AutoButtonPresentation::Mode::ReferenceAuto:
-                tooltip = juce::String::fromUTF8(u8"按参考 Clip 自动修音并对齐节奏");
+                tooltip = "Auto-tune and align rhythm to Reference Clip";
                 break;
             case ParameterPanel::AutoButtonPresentation::Mode::ReferenceBoundButFallbackToAuto:
-                tooltip = juce::String::fromUTF8(u8"已绑定参考源，但当前缺少 GAME backend / models，本次执行普通 AUTO。");
+                tooltip = "Reference bound but GAME models missing. Using standard Auto.";
                 break;
             case ParameterPanel::AutoButtonPresentation::Mode::StandardAuto:
             default:
-                tooltip = juce::String::fromUTF8(u8"自动修音（吸附到临近音阶）");
+                tooltip = "Auto-tune (snap to closest notes)";
                 break;
         }
     }
@@ -442,7 +442,7 @@ ParameterPanel::ParameterPanel()
     retuneSpeedLabel_.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(retuneSpeedLabel_);
 
-    setupLargeKnob(retuneSpeedSlider_, 0.0, 100.0, PitchControlConfig::kDefaultRetuneSpeedPercent, "%");
+    setupLargeKnob(retuneSpeedSlider_, 0.0, 100.0, PitchControlConfig::kDefaultRetuneSpeedPercent, "%", "Retune Speed");
     retuneSpeedSlider_.getProperties().set("minimalKnob", true);
     retuneSpeedSlider_.onValueChange = [this] { onRetuneSpeedChanged(); };
     addAndMakeVisible(retuneSpeedSlider_);
@@ -452,7 +452,7 @@ ParameterPanel::ParameterPanel()
     vibratoDepthLabel_.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(vibratoDepthLabel_);
 
-    setupLargeKnob(vibratoDepthSlider_, 0.0, 100.0, PitchControlConfig::kDefaultVibratoDepth, "%");
+    setupLargeKnob(vibratoDepthSlider_, 0.0, 100.0, PitchControlConfig::kDefaultVibratoDepth, "%", "Vibrato Depth");
     vibratoDepthSlider_.getProperties().set("minimalKnob", true);
     vibratoDepthSlider_.onValueChange = [this] { onVibratoDepthChanged(); };
     addAndMakeVisible(vibratoDepthSlider_);
@@ -462,7 +462,7 @@ ParameterPanel::ParameterPanel()
     vibratoRateLabel_.setJustificationType(juce::Justification::centred);
     addAndMakeVisible(vibratoRateLabel_);
 
-    setupLargeKnob(vibratoRateSlider_, 3.0, 12.0, PitchControlConfig::kDefaultVibratoRateHz, " Hz");
+    setupLargeKnob(vibratoRateSlider_, 3.0, 12.0, PitchControlConfig::kDefaultVibratoRateHz, " Hz", "Vibrato Rate");
     vibratoRateSlider_.getProperties().set("minimalKnob", true);
     vibratoRateSlider_.onValueChange = [this] { onVibratoRateChanged(); };
     addAndMakeVisible(vibratoRateSlider_);
@@ -476,7 +476,7 @@ ParameterPanel::ParameterPanel()
                    PitchControlConfig::kMinNoteSplitCents,
                    PitchControlConfig::kMaxNoteSplitCents,
                    PitchControlConfig::kDefaultNoteSplitCents,
-                   " cents");
+                   " cents", "Note Split");
     noteSplitSlider_.getProperties().set("minimalKnob", true);
     // NoteSplit 触发范围重分割（拓扑重建+undo 事务），代价远高于其他参数旋钮：
     // 拖动期间不逐格提交，释放时才通知一次（滚轮/键盘无拖拽语义，逐次提交，频率低可接受）。
@@ -524,7 +524,7 @@ ParameterPanel::ParameterPanel()
 
     // Pitch Shift action button
     pitchShiftButton_ = std::make_unique<juce::TextButton>("Pitch Shift...");
-    pitchShiftButton_->setTooltip(juce::String::fromUTF8(u8"整体移调"));
+    pitchShiftButton_->setTooltip("Global Pitch Shift");
     pitchShiftButton_->getProperties().set(UIColors::auroraChromeIntensityProperty,
                                            kAuroraSidebarChromeIntensity);
     pitchShiftButton_->onClick = [this] {
@@ -543,19 +543,19 @@ ParameterPanel::ParameterPanel()
     addChildComponent(*timeToolButton_);
 
     // ── OpenDyne 工具按钮（OpenDyne 专属，OpenTune 初态隐藏） ──
-    pitchToolButton_ = std::make_unique<ToolIconButton>(6, "Pitch", juce::String::fromUTF8(u8"Pitch 音高编辑\nF2"));
+    pitchToolButton_ = std::make_unique<ToolIconButton>(6, "Pitch", "Pitch Edit\nF2");
     pitchToolButton_->setRadioGroupId(1001);
     pitchToolButton_->setIcon(ToolbarIcons::getPitchToolIcon(), false);
     pitchToolButton_->onClick = [this] { onToolClicked(6); };
     addChildComponent(*pitchToolButton_);
 
-    volumeEnvelopeToolButton_ = std::make_unique<ToolIconButton>(7, "VolumeEnvelope", juce::String::fromUTF8(u8"Volume Envelope 音量包络\nF4"));
+    volumeEnvelopeToolButton_ = std::make_unique<ToolIconButton>(7, "VolumeEnvelope", "Volume Envelope\nF4");
     volumeEnvelopeToolButton_->setRadioGroupId(1001);
     volumeEnvelopeToolButton_->setIcon(ToolbarIcons::getVolumeEnvelopeToolIcon(), false);
     volumeEnvelopeToolButton_->onClick = [this] { onToolClicked(7); };
     addChildComponent(*volumeEnvelopeToolButton_);
 
-    scissorsToolButton_ = std::make_unique<ToolIconButton>(8, "Scissors", juce::String::fromUTF8(u8"Scissors 切割音符\nF6"));
+    scissorsToolButton_ = std::make_unique<ToolIconButton>(8, "Scissors", "Scissors\nF6");
     scissorsToolButton_->setRadioGroupId(1001);
     scissorsToolButton_->setIcon(ToolbarIcons::getScissorsToolIcon(), false);
     scissorsToolButton_->onClick = [this] { onToolClicked(8); };
@@ -574,7 +574,7 @@ ParameterPanel::ParameterPanel()
     addChildComponent(*pitchDriftToolButton_);
 
     // EQ tool button (visible in both OpenTune and OpenDyne modes)
-    eqToolButton_ = std::make_unique<ToolIconButton>(11, "EQ", juce::String::fromUTF8(u8"EQ 频率均衡\nE"));
+    eqToolButton_ = std::make_unique<ToolIconButton>(11, "EQ", "EQ\nE");
     eqToolButton_->setRadioGroupId(1001);
     eqToolButton_->setIcon(ToolbarIcons::getEqIcon(), false);
     eqToolButton_->setTextIcon("EQ");
@@ -916,8 +916,10 @@ void ParameterPanel::setupLabel(juce::Label& label, const juce::String& text)
     label.setColour(juce::Label::textColourId, UIColors::textSecondary);
 }
 
-void ParameterPanel::setupLargeKnob(juce::Slider& slider, double min, double max, double defaultVal, const juce::String& suffix)
+void ParameterPanel::setupLargeKnob(juce::Slider& slider, double min, double max, double defaultVal, const juce::String& suffix, const juce::String& name)
 {
+    slider.setName(name);
+    slider.setTitle(name);
     slider.setSliderStyle(juce::Slider::RotaryHorizontalVerticalDrag);
     // 文本框略加宽加高，减少“薄片感”
     slider.setTextBoxStyle(juce::Slider::TextBoxBelow, false, 84, 28);

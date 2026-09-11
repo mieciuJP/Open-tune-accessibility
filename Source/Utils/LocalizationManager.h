@@ -59,7 +59,7 @@ class LocalizationManager
 {
 public:
     struct LanguageState {
-        Language language = Language::Chinese;
+        Language language = Language::English;
     };
 
     class ScopedLanguageBinding
@@ -125,16 +125,7 @@ public:
 
     Language resolveLanguage()
     {
-        pruneExpiredBindings();
-
-        for (auto it = languageBindings_.rbegin(); it != languageBindings_.rend(); ++it) {
-            if (auto state = it->lock()) {
-                return state->language;
-            }
-        }
-
-        jassertfalse;
-        return Language::Chinese;
+        return Language::English;
     }
 
     void notifyLanguageChanged(Language lang)

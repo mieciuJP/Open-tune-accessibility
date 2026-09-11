@@ -143,7 +143,7 @@ private:
 
     void setupHeader(juce::Label& label, const juce::String& text);
     void setupLabel(juce::Label& label, const juce::String& text);
-    void setupLargeKnob(juce::Slider& slider, double min, double max, double defaultVal, const juce::String& suffix);
+    void setupLargeKnob(juce::Slider& slider, double min, double max, double defaultVal, const juce::String& suffix, const juce::String& name);
     
     void onRetuneSpeedChanged();
     void onVibratoDepthChanged();

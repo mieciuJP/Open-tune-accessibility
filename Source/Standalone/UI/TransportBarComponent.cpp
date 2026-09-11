@@ -1086,6 +1086,8 @@ TransportBarComponent::TransportBarComponent()
     {
         scaleRootSelector_.addItem(notes[i], i + 1);
     }
+    scaleRootSelector_.setName("Key");
+    scaleRootSelector_.setTitle("Key");
     scaleRootSelector_.setSelectedId(1, juce::dontSendNotification);
     scaleRootSelector_.onChange = [this] { onScaleChanged(); };
     scaleRootSelector_.setColour(juce::ComboBox::backgroundColourId, UIColors::backgroundLight);
@@ -1106,6 +1108,8 @@ TransportBarComponent::TransportBarComponent()
     scaleTypeSelector_.addItem("Mix.", 6);
     scaleTypeSelector_.addItem("Pent.", 7);
     scaleTypeSelector_.addItem("m.Pent.", 8);
+    scaleTypeSelector_.setName("Scale");
+    scaleTypeSelector_.setTitle("Scale");
     scaleTypeSelector_.setSelectedId(1, juce::dontSendNotification);
     scaleTypeSelector_.onChange = [this] { onScaleChanged(); };
     scaleTypeSelector_.setColour(juce::ComboBox::backgroundColourId, UIColors::backgroundLight);
