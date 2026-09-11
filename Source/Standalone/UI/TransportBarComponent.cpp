@@ -1059,16 +1059,23 @@ TransportBarComponent::TransportBarComponent()
     bpmField_.onCommit = [this](double) { onBpmChanged(); };
     bpmField_.onTimeSignatureCommit = [this](int num, int denom) { onTimeSignatureChanged(num, denom); };
     bpmField_.setTooltip(LOC(kTooltipBpm));
+    bpmField_.setName("BPM");
+    bpmField_.setTitle("BPM");
     addAndMakeVisible(bpmField_);
 
     // Setup Tap Button
+    tapButton_.setButtonText("TAP");
+    tapButton_.setTooltip("Tap Tempo");
+    tapButton_.setName("Tap Tempo");
+    tapButton_.setTitle("Tap Tempo");
     tapButton_.onClick = [this] { onTapClicked(); };
-    tapButton_.setTooltip(LOC(kTooltipTapTempo));
     tapButton_.getProperties().set(kOverdoseUiRoleKey, kOverdoseUiRoleTransport);
     addAndMakeVisible(tapButton_);
 
     timeDisplay_.setTimeString("00:00");
     timeDisplay_.setTooltip(LOC(kTooltipTimeline));
+    timeDisplay_.setName("Time Display");
+    timeDisplay_.setTitle("Time Display");
     addAndMakeVisible(timeDisplay_);
 
     // Apply styling (transport buttons use custom paintButton)

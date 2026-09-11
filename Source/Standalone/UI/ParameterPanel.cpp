@@ -929,6 +929,14 @@ void ParameterPanel::setupLargeKnob(juce::Slider& slider, double min, double max
     slider.setDoubleClickReturnValue(true, defaultVal);
     slider.setTextValueSuffix(suffix);
     slider.setLookAndFeel(&largeKnobLookAndFeel_);
+
+    // Set name for the internal Label so screen readers announce it
+    for (auto* child : slider.getChildren()) {
+        if (auto* label = dynamic_cast<juce::Label*>(child)) {
+            label->setName(name);
+            label->setTitle(name);
+        }
+    }
 }
 
 void ParameterPanel::addListener(Listener* listener)

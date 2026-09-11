@@ -46,10 +46,18 @@ public:
         semitoneSlider_.setColour(juce::Slider::textBoxTextColourId, UIColors::textPrimary);
         semitoneSlider_.setColour(juce::Slider::textBoxBackgroundColourId, UIColors::backgroundDark);
         semitoneSlider_.setColour(juce::Slider::textBoxOutlineColourId, UIColors::panelBorder);
+        semitoneSlider_.setName("Semitones");
+        semitoneSlider_.setTitle("Semitones");
+        for (auto* child : semitoneSlider_.getChildren()) {
+            if (auto* label = dynamic_cast<juce::Label*>(child)) {
+                label->setName("Semitones");
+                label->setTitle("Semitones");
+            }
+        }
         addAndMakeVisible(semitoneSlider_);
 
         // -- Semitone label --
-        semitoneLabel_.setText(juce::String::fromUTF8(u8"半音"), juce::dontSendNotification);
+        semitoneLabel_.setText("Semitone", juce::dontSendNotification);
         semitoneLabel_.setColour(juce::Label::textColourId, UIColors::textPrimary);
         semitoneLabel_.setFont(UIColors::getUIFont(14.0f));
         semitoneLabel_.setJustificationType(juce::Justification::centredLeft);
@@ -65,10 +73,18 @@ public:
         centsSlider_.setColour(juce::Slider::textBoxTextColourId, UIColors::textPrimary);
         centsSlider_.setColour(juce::Slider::textBoxBackgroundColourId, UIColors::backgroundDark);
         centsSlider_.setColour(juce::Slider::textBoxOutlineColourId, UIColors::panelBorder);
+        centsSlider_.setName("Cents");
+        centsSlider_.setTitle("Cents");
+        for (auto* child : centsSlider_.getChildren()) {
+            if (auto* label = dynamic_cast<juce::Label*>(child)) {
+                label->setName("Cents");
+                label->setTitle("Cents");
+            }
+        }
         addAndMakeVisible(centsSlider_);
 
         // -- Cents label --
-        centsLabel_.setText(juce::String::fromUTF8(u8"音分"), juce::dontSendNotification);
+        centsLabel_.setText("Cents", juce::dontSendNotification);
         centsLabel_.setColour(juce::Label::textColourId, UIColors::textPrimary);
         centsLabel_.setFont(UIColors::getUIFont(14.0f));
         centsLabel_.setJustificationType(juce::Justification::centredLeft);
