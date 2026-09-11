@@ -1,4 +1,4 @@
-﻿#include "ArrangementViewComponent.h"
+#include "ArrangementViewComponent.h"
 #include "AuroraTheme.h"
 #include "../../PluginProcessor.h"
 #include "UiAssets.h"
@@ -536,7 +536,11 @@ ArrangementViewComponent::ArrangementViewComponent(OpenTuneAudioProcessor& proce
     horizontalScrollBar_.addListener(this);
     verticalScrollBar_.addListener(this);
     horizontalScrollBar_.setAutoHide(false);
+    horizontalScrollBar_.setWantsKeyboardFocus(false);
+    horizontalScrollBar_.setAccessible(false);
     verticalScrollBar_.setAutoHide(false);
+    verticalScrollBar_.setWantsKeyboardFocus(false);
+    verticalScrollBar_.setAccessible(false);
 
     scrollModeToggleButton_.setButtonText(scrollMode_ == ScrollMode::Continuous ? "Cont" : "Page");
     scrollModeToggleButton_.setLookAndFeel(&smallButtonLookAndFeel_);

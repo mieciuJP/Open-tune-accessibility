@@ -1,4 +1,4 @@
-﻿#include "PianoRollComponent.h"
+#include "PianoRollComponent.h"
 #include "../../PluginProcessor.h"
 #include "../../Utils/LocalizationManager.h"
 #include "../Utils/AppLogger.h"
@@ -64,6 +64,8 @@ void PianoRollComponent::initializeUIComponents() {
     addAndMakeVisible(verticalScrollBar_);
     verticalScrollBar_.addListener(this);
     verticalScrollBar_.setAutoHide(false);
+    verticalScrollBar_.setWantsKeyboardFocus(false);
+    verticalScrollBar_.setAccessible(false);
 
     // OpenDyne：双击滚动条 = 缩放到全部音符
     fitToAllNotesOnDoubleClick_ = std::make_unique<FitToAllNotesOnDoubleClick>(*this);

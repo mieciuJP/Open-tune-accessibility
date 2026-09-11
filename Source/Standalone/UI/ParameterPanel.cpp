@@ -930,11 +930,15 @@ void ParameterPanel::setupLargeKnob(juce::Slider& slider, double min, double max
     slider.setTextValueSuffix(suffix);
     slider.setLookAndFeel(&largeKnobLookAndFeel_);
 
-    // Set name for the internal Label so screen readers announce it
+    // Allow the slider to take keyboard focus directly
+    slider.setWantsKeyboardFocus(true);
+
+    // Disable focus and independent accessibility for the internal text box
+    // so the screen reader reads the Slider's name and value properly.
     for (auto* child : slider.getChildren()) {
         if (auto* label = dynamic_cast<juce::Label*>(child)) {
-            label->setName(name);
-            label->setTitle(name);
+            label->setWantsKeyboardFocus(false);
+            label->setAccessible(false);
         }
     }
 }
