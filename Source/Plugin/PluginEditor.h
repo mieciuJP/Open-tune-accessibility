@@ -64,6 +64,8 @@ public:
     void resized() override;
     void mouseDown(const juce::MouseEvent& e) override;
     bool keyPressed(const juce::KeyPress& key) override;
+    
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
 
     void retuneSpeedChanged(float speed) override;
     void vibratoDepthChanged(float value) override;

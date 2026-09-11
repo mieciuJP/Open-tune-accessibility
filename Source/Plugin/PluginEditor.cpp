@@ -105,6 +105,10 @@ OpenTuneAudioProcessorEditor::OpenTuneAudioProcessorEditor(OpenTuneAudioProcesso
     // 最小宽度 855 = TransportBar 固定内容 711 + reduced(4,4) 8 + TopBar 边距 136（reduced 12×2 + pad 3×2 + 左右侧栏切换钮各 53）
     setResizeLimits(855, ParameterPanel::kMinimumPanelHeight + TOP_BAR_HEIGHT + 12, 2000, 1400);
     setSize(1000, 900);
+    
+    setWantsKeyboardFocus(true);
+    setName("OpenTune Editor");
+    setTitle("OpenTune Editor");
 
     UIColors::applyTheme(appPreferences_.getState().shared.theme);
 
@@ -231,6 +235,11 @@ OpenTuneAudioProcessorEditor::~OpenTuneAudioProcessorEditor()
     transportBar_.removeListener(this);
     parameterPanel_.removeListener(this);
     pianoRoll_.removeListener(this);
+}
+
+std::unique_ptr<juce::AccessibilityHandler> OpenTuneAudioProcessorEditor::createAccessibilityHandler()
+{
+    return std::make_unique<juce::AccessibilityHandler>(*this, juce::AccessibilityRole::window, juce::AccessibilityActions{}, juce::AccessibilityHandler::Interfaces{});
 }
 
 // =========================================================================
