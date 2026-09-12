@@ -57,6 +57,21 @@ bool isFullyCorrectedInRange(const PitchCurveSnapshot& curve, int startFrame, in
     return fullyCorrected;
 }
 
+class PianoRollAccessibilityHandler : public juce::AccessibilityHandler
+{
+public:
+    PianoRollAccessibilityHandler(PianoRollComponent& p)
+        : AccessibilityHandler(p, juce::AccessibilityRole::list), pianoRoll(p) {}
+
+    juce::String getTitle() const override
+    {
+        return pianoRoll.getAccessibilityTitleForSelectedNote();
+    }
+
+private:
+    PianoRollComponent& pianoRoll;
+};
+
 } // namespace
 
 void PianoRollComponent::initializeUIComponents() {
@@ -680,6 +695,34 @@ PianoRollComponent::~PianoRollComponent() {
     verticalScrollBar_.removeListener(this);
 }
 
+std::unique_ptr<juce::AccessibilityHandler> PianoRollComponent::createAccessibilityHandler() {
+    return std::make_unique<PianoRollAccessibilityHandler>(*this);
+}
+
+juce::String PianoRollComponent::getAccessibilityTitleForSelectedNote() const {
+    if (interactionState_.noteSelection.selectedIndices.empty()) {
+        if (cachedNotes_.empty())
+            return "Piano Roll. 0 notes available. Please capture audio first.";
+        return "Piano Roll. " + juce::String(cachedNotes_.size()) + " notes. Use Left and Right arrows to navigate notes.";
+    }
+
+    int idx = interactionState_.noteSelection.selectedIndices.front();
+    if (idx < 0 || idx >= static_cast<int>(cachedNotes_.size()))
+        return "Selected note is invalid.";
+
+    const auto& note = cachedNotes_[idx];
+    
+    // Calculate MIDI note and pitch name
+    float midiFloat = 12.0f * std::log2(std::max(1.0f, note.pitch) / 440.0f) + 69.0f;
+    int midiInt = static_cast<int>(std::round(midiFloat));
+    const char* names[] = {"C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"};
+    juce::String pitchName = names[juce::jlimit(0, 11, midiInt % 12)] + juce::String(midiInt / 12 - 1);
+    
+    // Add number format for time
+    return juce::String("Note ") + juce::String(idx + 1) + " of " + juce::String(cachedNotes_.size()) + ": " + 
+           pitchName + ", starts at " + juce::String(note.startTime, 2) + " seconds, length " + juce::String(note.getDuration(), 2) + " seconds. " +
+           (interactionState_.noteSelection.selectedIndices.size() > 1 ? "Multiple notes selected." : "");
+}
 
 
 void PianoRollComponent::setProcessor(OpenTuneAudioProcessor* processor)
@@ -4637,6 +4680,30 @@ void PianoRollComponent::duplicateNotes()
 }
 
 bool PianoRollComponent::keyPressed(const juce::KeyPress& key) {
+    if (key.isKeyCode(juce::KeyPress::leftKey) || key.isKeyCode(juce::KeyPress::rightKey)) {
+        if (!cachedNotes_.empty()) {
+            int currentIdx = interactionState_.noteSelection.selectedIndices.empty() ? -1 : interactionState_.noteSelection.selectedIndices.front();
+            int nextIdx = currentIdx;
+
+            if (key.isKeyCode(juce::KeyPress::leftKey)) {
+                nextIdx = (currentIdx <= 0) ? static_cast<int>(cachedNotes_.size()) - 1 : currentIdx - 1;
+            } else {
+                nextIdx = (currentIdx == -1 || currentIdx >= static_cast<int>(cachedNotes_.size()) - 1) ? 0 : currentIdx + 1;
+            }
+
+            interactionState_.noteSelection.selectedIndices.clear();
+            interactionState_.noteSelection.selectedIndices.push_back(nextIdx);
+            
+            fitToNote(cachedNotes_[nextIdx]);
+            invalidateSelectionFeedback();
+            
+            if (auto* handler = getAccessibilityHandler())
+                handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            
+            return true;
+        }
+    }
+
     if (KeyShortcutConfig::matchesShortcut(shortcutSettings_, KeyShortcutConfig::ShortcutId::Undo, key)) {
         listeners_.call([](Listener& l) { l.undoRequested(); });
         return true;

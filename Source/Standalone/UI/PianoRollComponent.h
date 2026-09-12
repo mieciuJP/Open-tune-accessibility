@@ -399,7 +399,12 @@ private:
     void mouseUp(const juce::MouseEvent& e) override;
     void mouseDoubleClick(const juce::MouseEvent& e) override;
     void mouseWheelMove(const juce::MouseEvent& e, const juce::MouseWheelDetails& wheel) override;
+    bool isKeyModifyingTool(const juce::KeyPress& key) const;
+
 public:
+    std::unique_ptr<juce::AccessibilityHandler> createAccessibilityHandler() override;
+    juce::String getAccessibilityTitleForSelectedNote() const;
+
     bool keyPressed(const juce::KeyPress& key) override;
 
     /// Re-read notes from the content store and update the cache.

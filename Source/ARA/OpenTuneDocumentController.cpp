@@ -13,6 +13,7 @@
 #include "../Utils/TimeCoordinate.h"
 #include "../Utils/SilentGapDetector.h"
 #include "../Utils/PitchCurve.h"
+#include "../Utils/LegacyNoteGenerator.h"
 #include "../Inference/RenderCache.h"
 #include "../Render/Stage2TimeStretchRebuilder.h"
 #include "../Utils/SourceWindow.h"
@@ -1150,6 +1151,7 @@ void OpenTuneDocumentController::didUpdatePlaybackRegionProperties(juce::ARAPlay
 {
     auto& region = ensurePlaybackRegion(playbackRegion);
     region.updateFrom(playbackRegion);
+    readRestoredAudio(nullptr);
     refreshRegisteredRenderers(publishModelChange());
 }
 
@@ -1169,6 +1171,10 @@ void OpenTuneDocumentController::didAddPlaybackRegionToAudioModification(
     region.updateFrom(playbackRegion);
     if (region.audioModificationPersistentId.isEmpty())
         region.audioModificationPersistentId = modification.persistentId;
+    
+    // Auto-analyze newly added items if sample access is already enabled
+    readRestoredAudio(nullptr);
+    
     refreshRegisteredRenderers(publishModelChange());
 }
 
@@ -1777,11 +1783,7 @@ void OpenTuneDocumentController::readRestoredAudio(const AudioSource* enabledSou
             continue;
 
         auto& content = *mod.content;
-        if (content.analysis.originalF0State != OriginalF0State::Ready
-            || content.analysis.pitchCurve == nullptr
-            || !content.analysis.pitchCurve->hasOriginalF0Data())
-            continue;
-
+        
         if (enabledSource != nullptr
             && content.sourceWindow.sourcePersistentId != enabledSource->getIdentity().persistentId)
             continue;
@@ -2200,6 +2202,28 @@ bool OpenTuneDocumentController::scheduleAsyncF0Extraction(
                     const auto detectedKey = detector.detect(result.f0, result.energy);
                     if (detectedKey.origin != Origin::Unset)
                         mod->applyDetectedKey(detectedKey);
+                }
+
+                // Automatically generate notes if note topology is not initialized
+                if (!mod->content->editable.noteTopologyInitialized) {
+                    NoteGeneratorParams defaultParams;
+                    auto generatedNotes = LegacyNoteGenerator::generate(
+                        result.f0.data(), 
+                        static_cast<int>(result.f0.size()), 
+                        nullptr, 
+                        0, 
+                        static_cast<int>(result.f0.size()),
+                        result.hopSize, 
+                        static_cast<double>(result.f0SampleRate), 
+                        defaultParams);
+                    
+                    if (LegacyNoteGenerator::validate(generatedNotes)) {
+                        for (auto& note : generatedNotes) {
+                            if (note.originalPitch > 0.0f)
+                                note.pitch = note.originalPitch;
+                        }
+                        mod->applyNotes(std::move(generatedNotes));
+                    }
                 }
 
                 mod->applyOriginalF0(std::move(pitchCurve));
