@@ -719,9 +719,9 @@ juce::String PianoRollComponent::getAccessibilityTitleForSelectedNote() const {
     juce::String pitchName = names[juce::jlimit(0, 11, midiInt % 12)] + juce::String(midiInt / 12 - 1);
     
     // Add number format for time
-    return juce::String("Note ") + juce::String(idx + 1) + " of " + juce::String(cachedNotes_.size()) + ": " + 
-           pitchName + ", starts at " + juce::String(note.startTime, 2) + " seconds, length " + juce::String(note.getDuration(), 2) + " seconds. " +
-           (interactionState_.noteSelection.selectedIndices.size() > 1 ? "Multiple notes selected." : "");
+    return juce::String(idx + 1) + " of " + juce::String(cachedNotes_.size()) + ": " + 
+           pitchName + ", start: " + juce::String(note.startTime, 2) + " S, length " + juce::String(note.getDuration(), 2) + " S." +
+           (interactionState_.noteSelection.selectedIndices.size() > 1 ? " Multiple notes selected." : "");
 }
 
 
@@ -4680,7 +4680,7 @@ void PianoRollComponent::duplicateNotes()
 }
 
 bool PianoRollComponent::keyPressed(const juce::KeyPress& key) {
-    if (key.isKeyCode(juce::KeyPress::leftKey) || key.isKeyCode(juce::KeyPress::rightKey)) {
+    if (!key.getModifiers().isAnyModifierKeyDown() && (key.isKeyCode(juce::KeyPress::leftKey) || key.isKeyCode(juce::KeyPress::rightKey))) {
         if (!cachedNotes_.empty()) {
             int currentIdx = interactionState_.noteSelection.selectedIndices.empty() ? -1 : interactionState_.noteSelection.selectedIndices.front();
             int nextIdx = currentIdx;
@@ -4697,9 +4697,65 @@ bool PianoRollComponent::keyPressed(const juce::KeyPress& key) {
             fitToNote(cachedNotes_[nextIdx]);
             invalidateSelectionFeedback();
             
+            // Synchronize host playhead position
+            double targetTime = sourceTimeToTimelineTime(cachedNotes_[nextIdx].startTime);
+            listeners_.call([targetTime](Listener& l) { l.playheadPositionChangeRequested(targetTime); });
+            
             if (auto* handler = getAccessibilityHandler())
                 handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
             
+            return true;
+        }
+    }
+
+    if (!key.getModifiers().isAnyModifierKeyDown() && (key.isKeyCode(juce::KeyPress::upKey) || key.isKeyCode(juce::KeyPress::downKey))) {
+        if (!interactionState_.noteSelection.selectedIndices.empty() && !cachedNotes_.empty()) {
+            float semitones = (key.isKeyCode(juce::KeyPress::upKey)) ? 1.0f : -1.0f;
+            
+            auto snap = readEditedSnapshot();
+            if (!snap || !snap->pitchCurve) return true;
+            
+            std::vector<Note> notes = cachedNotes_;
+            bool changed = false;
+            
+            int minFrame = std::numeric_limits<int>::max();
+            int maxFrame = -1;
+            
+            auto curveSnap = snap->pitchCurve->getSnapshot();
+            if (!curveSnap) return true;
+            
+            const double hopSize = curveSnap->getHopSize();
+            const double sampleRate = curveSnap->getSampleRate();
+            
+            for (int idx : interactionState_.noteSelection.selectedIndices) {
+                if (idx >= 0 && idx < static_cast<int>(notes.size())) {
+                    float currentMidi = PitchUtils::freqToMidi(notes[idx].pitch);
+                    notes[idx].pitch = PitchUtils::midiToFreq(currentMidi + semitones);
+                    changed = true;
+                    
+                    int sf = static_cast<int>((notes[idx].startTime * sampleRate) / hopSize);
+                    int ef = static_cast<int>((notes[idx].endTime * sampleRate) / hopSize) + 1;
+                    minFrame = std::min(minFrame, sf);
+                    maxFrame = std::max(maxFrame, ef);
+                }
+            }
+            
+            if (changed && maxFrame > minFrame) {
+                auto clonedCurve = snap->pitchCurve->clone();
+                const auto params = getCurrentAutoTuneParams();
+                clonedCurve->applyCorrectionToRange(
+                    notes, minFrame, maxFrame,
+                    static_cast<float>(snap->pitchShiftSettings.getPitchRatio()),
+                    params.retuneSpeed, params.vibratoDepth, params.vibratoRate);
+                
+                auto newSegments = clonedCurve->copyCorrectionSegments();
+                pendingUndoDescription_ = juce::String::fromUTF8(u8"Transpozycja nut");
+                commitEditedContentNotesAndSegments(
+                    *snap, notes, newSegments, F0FrameRange{minFrame, maxFrame});
+                
+                if (auto* handler = getAccessibilityHandler())
+                    handler->notifyAccessibilityEvent(juce::AccessibilityEvent::titleChanged);
+            }
             return true;
         }
     }
